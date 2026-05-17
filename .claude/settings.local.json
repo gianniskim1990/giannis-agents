@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(Start-Process -NoNewWindow npm -ArgumentList \"run\",\"dev\" -RedirectStandardOutput \"dev-out.txt\" -RedirectStandardError \"dev-err.txt\")",
+      "Bash(Start-Sleep 8)",
+      "Bash(Get-Content dev-out.txt)",
+      "Bash(Get-Content dev-err.txt)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(curl -s http://localhost:3000)"
+    ]
+  }
+}
