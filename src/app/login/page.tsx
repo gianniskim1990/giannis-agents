@@ -1,20 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('error') === 'unauthorized') {
-      setError('Μη εξουσιοδοτημένος χρήστης')
-    }
-  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,17 +17,13 @@ export default function LoginPage() {
     setError('')
 
     const supabase = createSupabaseBrowser()
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
-      setError(authError.message)
+      setError('Λάθος email ή κωδικός πρόσβασης')
     } else {
-      setSent(true)
+      router.push('/')
+      router.refresh()
     }
     setLoading(false)
   }
@@ -47,27 +38,31 @@ export default function LoginPage() {
           <h1 className="text-xl font-semibold text-white">Giannis Agents</h1>
         </div>
 
-        {sent ? (
-          <p className="text-center text-sm text-white/70">Ελέγξτε το email σας</p>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/40 outline-none focus:border-white/30"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-white/20 py-3 text-sm font-medium text-white transition-colors hover:bg-white/30 disabled:opacity-50"
-            >
-              {loading ? '...' : 'Αποστολή magic link'}
-            </button>
-          </form>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/40 outline-none focus:border-white/30"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Κωδικός"
+            required
+            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/40 outline-none focus:border-white/30"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-white/20 py-3 text-sm font-medium text-white transition-colors hover:bg-white/30 disabled:opacity-50"
+          >
+            {loading ? '...' : 'Σύνδεση'}
+          </button>
+        </form>
 
         {error && (
           <p className="mt-4 text-center text-sm text-red-400">{error}</p>
