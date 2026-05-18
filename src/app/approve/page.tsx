@@ -11,10 +11,26 @@ const colorLabels: Record<string, string> = {
   ena: 'κεχριμπάρι/πορτοκαλί (#f59e0b)',
 }
 
+function ErrorPage({ message }: { message: string }) {
+  return (
+    <div className="flex h-screen items-center justify-center bg-[#111827]">
+      <div className="text-center">
+        <p className="mb-4 text-white">{message}</p>
+        <a
+          href="/"
+          className="rounded-xl bg-white/10 px-5 py-2 text-sm text-white transition-colors hover:bg-white/20"
+        >
+          ← Πίσω στην εφαρμογή
+        </a>
+      </div>
+    </div>
+  )
+}
+
 export default async function ApprovePage({
   searchParams,
 }: {
-  searchParams: Promise<{ agent?: string; idea?: string }>
+  searchParams: Promise<{ id?: string }>
 }) {
   const supabase = await createSupabaseServer()
   const {
@@ -25,28 +41,30 @@ export default async function ApprovePage({
     redirect('/login')
   }
 
-  const { agent: agentParam, idea } = await searchParams
-  const agentId = agentParam ?? ''
+  const { id } = await searchParams
 
-  const agent = agents[agentId]
-
-  if (!agent || !idea) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#111827]">
-        <div className="text-center">
-          <p className="mb-4 text-white">Λείπουν παράμετροι. Δεν ήταν δυνατή η φόρτωση της σελίδας.</p>
-          <a
-            href="/"
-            className="rounded-xl bg-white/10 px-5 py-2 text-sm text-white transition-colors hover:bg-white/20"
-          >
-            ← Πίσω στην εφαρμογή
-          </a>
-        </div>
-      </div>
-    )
+  if (!id) {
+    return <ErrorPage message="Λείπει το αναγνωριστικό ιδέας." />
   }
 
-  const colorLabel = colorLabels[agentId] ?? agent.color
+  const { data: pending } = await supabase
+    .from('pending_ideas')
+    .select('agent_id, idea_text')
+    .eq('id', id)
+    .single()
+
+  if (!pending) {
+    return <ErrorPage message="Η ιδέα δεν βρέθηκε. Ίσως έχει λήξει ή ο σύνδεσμος είναι λανθασμένος." />
+  }
+
+  const agent = agents[pending.agent_id]
+  const idea: string = pending.idea_text
+
+  if (!agent) {
+    return <ErrorPage message="Άγνωστος agent. Δεν ήταν δυνατή η φόρτωση της σελίδας." />
+  }
+
+  const colorLabel = colorLabels[pending.agent_id] ?? agent.color
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 

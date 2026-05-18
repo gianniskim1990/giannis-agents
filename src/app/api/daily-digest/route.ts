@@ -53,7 +53,15 @@ export async function GET(request: Request) {
       const idea =
         response.content[0].type === 'text' ? response.content[0].text : '—'
 
-      return { agent, idea }
+      const { data: inserted } = await supabase
+        .from('pending_ideas')
+        .insert({ agent_id: agent.id, idea_text: idea })
+        .select('id')
+        .single()
+
+      const ideaId: string = inserted?.id ?? ''
+
+      return { agent, idea, ideaId }
     }),
   )
 
@@ -72,15 +80,13 @@ export async function GET(request: Request) {
 }
 
 function buildEmailHtml(
-  sections: Array<{ agent: (typeof agentList)[number]; idea: string }>,
+  sections: Array<{ agent: (typeof agentList)[number]; idea: string; ideaId: string }>,
   date: string,
 ) {
   const agentSections = sections
     .map(
-      ({ agent, idea }) => {
-        const encodedAgent = encodeURIComponent(agent.id)
-        const encodedIdea = encodeURIComponent(idea)
-        const approveUrl = `https://agents.pigiota314.gr/approve?agent=${encodedAgent}&idea=${encodedIdea}`
+      ({ agent, idea, ideaId }) => {
+        const approveUrl = `https://agents.pigiota314.gr/approve?id=${ideaId}`
         return `
     <div style="margin-bottom:28px;border-left:4px solid ${agent.color};padding-left:16px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
