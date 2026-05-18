@@ -78,7 +78,9 @@ function buildEmailHtml(
   const agentSections = sections
     .map(
       ({ agent, idea }) => {
-        const approveUrl = `https://agents.pigiota314.gr/approve?agent=${encodeURIComponent(agent.id)}&idea=${encodeURIComponent(idea)}`
+        const encodedAgent = encodeURIComponent(agent.id)
+        const encodedIdea = encodeURIComponent(idea)
+        const approveUrl = `https://agents.pigiota314.gr/approve?agent=${encodedAgent}&idea=${encodedIdea}`
         return `
     <div style="margin-bottom:28px;border-left:4px solid ${agent.color};padding-left:16px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">

@@ -25,16 +25,23 @@ export default async function ApprovePage({
     redirect('/login')
   }
 
-  const params = await searchParams
-  const agentId = params.agent ?? ''
-  const idea = params.idea ?? ''
+  const { agent: agentParam, idea } = await searchParams
+  const agentId = agentParam ?? ''
 
   const agent = agents[agentId]
 
   if (!agent || !idea) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#111827]">
-        <p className="text-white">Λείπουν παράμετροι. Δεν ήταν δυνατή η φόρτωση της σελίδας.</p>
+        <div className="text-center">
+          <p className="mb-4 text-white">Λείπουν παράμετροι. Δεν ήταν δυνατή η φόρτωση της σελίδας.</p>
+          <a
+            href="/"
+            className="rounded-xl bg-white/10 px-5 py-2 text-sm text-white transition-colors hover:bg-white/20"
+          >
+            ← Πίσω στην εφαρμογή
+          </a>
+        </div>
       </div>
     )
   }
