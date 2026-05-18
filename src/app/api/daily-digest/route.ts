@@ -59,14 +59,16 @@ export async function GET(request: Request) {
 
   const html = buildEmailHtml(sections, today)
 
-  const { data, error } = await resend.emails.send({
+  const to = process.env.DAILY_EMAIL_TO ?? 'italybar1234@gmail.com'
+
+  await resend.emails.send({
     from: 'Giannis Agents <onboarding@resend.dev>',
-    to: process.env.DAILY_EMAIL_TO!,
+    to,
     subject: `🧠 Ιδέες των Agents σου — ${today}`,
     html,
   })
 
-  return Response.json({ ok: !error, date: today, to: process.env.DAILY_EMAIL_TO, resend: error ?? data })
+  return Response.json({ ok: true, date: today })
 }
 
 function buildEmailHtml(
