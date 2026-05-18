@@ -19,3 +19,11 @@ export interface Message {
   content: string
   created_at: string
 }
+
+export interface AgentMemory {
+  id: string
+  agent_id: string
+  memory_key: string
+  memory_value: string
+  created_at: string
+}

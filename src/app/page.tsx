@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, type Conversation, type Message } from '@/lib/supabase'
+import { supabase, type Conversation, type Message, type AgentMemory } from '@/lib/supabase'
 import { agentList, agents, type Agent } from '@/lib/agents'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { Send, Plus, MessageSquare, ChevronRight, LogOut } from 'lucide-react'
@@ -17,11 +17,17 @@ export default function Home() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingText, setStreamingText] = useState('')
   const [isNewConv, setIsNewConv] = useState(false)
+  const [memories, setMemories] = useState<AgentMemory[]>([])
+  const [memoryExpanded, setMemoryExpanded] = useState(false)
+  const [isAddingMemory, setIsAddingMemory] = useState(false)
+  const [newMemoryKey, setNewMemoryKey] = useState('')
+  const [newMemoryValue, setNewMemoryValue] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     loadConversations(activeAgent.id)
+    loadMemories(activeAgent.id)
     setActiveConvId(null)
     setMessages([])
     setIsNewConv(false)
@@ -51,6 +57,67 @@ export default function Home() {
       .eq('conversation_id', convId)
       .order('created_at', { ascending: true })
     setMessages(data ?? [])
+  }
+
+  async function loadMemories(agentId: string) {
+    const { data } = await supabase
+      .from('agent_memory')
+      .select('*')
+      .eq('agent_id', agentId)
+      .order('created_at', { ascending: false })
+    setMemories(data ?? [])
+  }
+
+  async function deleteMemory(id: string) {
+    await supabase.from('agent_memory').delete().eq('id', id)
+    setMemories((prev) => prev.filter((m) => m.id !== id))
+  }
+
+  async function addMemory() {
+    const key = newMemoryKey.trim()
+    const value = newMemoryValue.trim()
+    if (!key || !value) return
+    const { data } = await supabase
+      .from('agent_memory')
+      .insert({ agent_id: activeAgent.id, memory_key: key, memory_value: value })
+      .select()
+      .single()
+    if (data) setMemories((prev) => [data, ...prev])
+    setNewMemoryKey('')
+    setNewMemoryValue('')
+    setIsAddingMemory(false)
+  }
+
+  async function extractAndSaveMemories(
+    agentId: string,
+    conversationLines: Array<{ role: string; content: string }>,
+  ) {
+    try {
+      const conversation = conversationLines
+        .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+        .join('\n')
+
+      const res = await fetch('/api/extract-memory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation }),
+      })
+
+      if (!res.ok) return
+      const facts: Array<{ key: string; value: string }> = await res.json()
+
+      for (const fact of facts) {
+        if (!fact.key || !fact.value) continue
+        const { data } = await supabase
+          .from('agent_memory')
+          .insert({ agent_id: agentId, memory_key: fact.key, memory_value: fact.value })
+          .select()
+          .single()
+        if (data) setMemories((prev) => [data, ...prev])
+      }
+    } catch {
+      // non-critical
+    }
   }
 
   function startNewConversation() {
@@ -142,6 +209,11 @@ export default function Home() {
           created_at: new Date().toISOString(),
         },
       ])
+
+      extractAndSaveMemories(activeAgent.id, [
+        ...apiMessages,
+        { role: 'assistant', content: accumulated },
+      ])
     } catch {
       // keep partial streaming text if any
     } finally {
@@ -212,6 +284,90 @@ export default function Home() {
               </button>
             )
           })}
+        </div>
+
+        {/* Memory panel */}
+        <div className="px-3 pb-1">
+          <button
+            onClick={() => setMemoryExpanded((v) => !v)}
+            className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs text-white/40 transition-colors hover:bg-white/10 hover:text-white/60"
+          >
+            <span className="font-medium uppercase tracking-wider">Μνήμη 🧠</span>
+            <ChevronRight
+              className="h-3 w-3 transition-transform"
+              style={{ transform: memoryExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+            />
+          </button>
+
+          {memoryExpanded && (
+            <div className="mt-1 space-y-1">
+              {memories.length === 0 && !isAddingMemory && (
+                <p className="px-2 py-1 text-xs text-white/25">Καμία μνήμη ακόμα</p>
+              )}
+              {memories.map((mem) => (
+                <div
+                  key={mem.id}
+                  className="flex items-start gap-1.5 rounded-md bg-white/5 px-2 py-1.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-medium text-white/60">{mem.memory_key}: </span>
+                    <span className="text-xs text-white/40">{mem.memory_value}</span>
+                  </div>
+                  <button
+                    onClick={() => deleteMemory(mem.id)}
+                    className="flex-shrink-0 text-white/20 transition-colors hover:text-white/60"
+                    title="Διαγραφή"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+
+              {isAddingMemory ? (
+                <div className="space-y-1 pt-1">
+                  <input
+                    value={newMemoryKey}
+                    onChange={(e) => setNewMemoryKey(e.target.value)}
+                    placeholder="Κλειδί"
+                    className="w-full rounded-md bg-white/10 px-2 py-1 text-xs text-white placeholder-white/30 outline-none focus:bg-white/15"
+                  />
+                  <input
+                    value={newMemoryValue}
+                    onChange={(e) => setNewMemoryValue(e.target.value)}
+                    placeholder="Τιμή"
+                    className="w-full rounded-md bg-white/10 px-2 py-1 text-xs text-white placeholder-white/30 outline-none focus:bg-white/15"
+                    onKeyDown={(e) => e.key === 'Enter' && addMemory()}
+                  />
+                  <div className="flex gap-1">
+                    <button
+                      onClick={addMemory}
+                      className="flex-1 rounded-md bg-white/10 py-1 text-xs text-white/70 transition-colors hover:bg-white/20"
+                    >
+                      ✓ Αποθήκευση
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsAddingMemory(false)
+                        setNewMemoryKey('')
+                        setNewMemoryValue('')
+                      }}
+                      className="rounded-md bg-white/5 px-2 py-1 text-xs text-white/40 transition-colors hover:bg-white/10"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAddingMemory(true)}
+                  className="flex w-full items-center gap-1 rounded-md px-2 py-1 text-xs text-white/30 transition-colors hover:bg-white/10 hover:text-white/60"
+                >
+                  <Plus className="h-3 w-3" />
+                  Προσθήκη
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Divider */}
