@@ -19,6 +19,8 @@ export default function Home() {
   const [isNewConv, setIsNewConv] = useState(false)
   const [dailyIdea, setDailyIdea] = useState<string | null>(null)
   const [isDailyIdeaLoading, setIsDailyIdeaLoading] = useState(false)
+  const [canvaUrl, setCanvaUrl] = useState<string | null>(null)
+  const [isCreatingCanva, setIsCreatingCanva] = useState(false)
   const [memories, setMemories] = useState<AgentMemory[]>([])
   const [memoryExpanded, setMemoryExpanded] = useState(false)
   const [isAddingMemory, setIsAddingMemory] = useState(false)
@@ -35,6 +37,8 @@ export default function Home() {
     setIsNewConv(false)
     setDailyIdea(null)
     setIsDailyIdeaLoading(false)
+    setCanvaUrl(null)
+    setIsCreatingCanva(false)
   }, [activeAgent.id])
 
   useEffect(() => {
@@ -156,10 +160,33 @@ export default function Home() {
     }
   }
 
+  async function createCanvaGraphic() {
+    if (!dailyIdea) return
+    const confirmed = window.confirm('Να δημιουργήσω γραφικό για αυτή την ιδέα;')
+    if (!confirmed) return
+    setIsCreatingCanva(true)
+    setCanvaUrl(null)
+    try {
+      const res = await fetch('/api/create-canva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idea: dailyIdea }),
+      })
+      const data = await res.json()
+      if (data.url) setCanvaUrl(data.url)
+    } catch {
+      // fail silently
+    } finally {
+      setIsCreatingCanva(false)
+    }
+  }
+
   function startNewConversation() {
     setActiveConvId(null)
     setMessages([])
     setIsNewConv(true)
+    setCanvaUrl(null)
+    setIsCreatingCanva(false)
     inputRef.current?.focus()
     generateDailyIdea(activeAgent)
   }
@@ -169,6 +196,8 @@ export default function Home() {
     setIsNewConv(false)
     setDailyIdea(null)
     setIsDailyIdeaLoading(false)
+    setCanvaUrl(null)
+    setIsCreatingCanva(false)
   }
 
   async function sendMessage() {
@@ -507,14 +536,50 @@ export default function Home() {
                   >
                     {activeAgent.initials}
                   </div>
-                  <div className="max-w-[70%] rounded-2xl rounded-tl-sm border border-gray-100 bg-white px-4 py-3 text-sm leading-relaxed text-gray-800 shadow-sm whitespace-pre-wrap">
-                    {isDailyIdeaLoading && !dailyIdea ? (
-                      <span className="flex gap-1 py-1">
-                        <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '0ms' }} />
-                        <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '150ms' }} />
-                        <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '300ms' }} />
-                      </span>
-                    ) : dailyIdea}
+                  <div className="flex flex-col gap-2 max-w-[70%]">
+                    <div className="rounded-2xl rounded-tl-sm border border-gray-100 bg-white px-4 py-3 text-sm leading-relaxed text-gray-800 shadow-sm whitespace-pre-wrap">
+                      {isDailyIdeaLoading && !dailyIdea ? (
+                        <span className="flex gap-1 py-1">
+                          <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '0ms' }} />
+                          <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '150ms' }} />
+                          <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '300ms' }} />
+                        </span>
+                      ) : dailyIdea}
+                    </div>
+
+                    {/* Canva button — shown once idea is fully loaded */}
+                    {dailyIdea && !isDailyIdeaLoading && (
+                      <div className="flex items-center gap-2">
+                        {!canvaUrl && (
+                          <button
+                            onClick={createCanvaGraphic}
+                            disabled={isCreatingCanva}
+                            className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-50 hover:opacity-90"
+                            style={{ backgroundColor: activeAgent.color }}
+                          >
+                            {isCreatingCanva ? (
+                              <>
+                                <span className="h-3 w-3 rounded-full animate-bounce inline-block bg-white/60" />
+                                <span>Δημιουργία...</span>
+                              </>
+                            ) : (
+                              'Δημιουργία γραφικού ✨'
+                            )}
+                          </button>
+                        )}
+                        {canvaUrl && (
+                          <a
+                            href={canvaUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: activeAgent.color }}
+                          >
+                            Άνοιξε στο Canva 🎨
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
