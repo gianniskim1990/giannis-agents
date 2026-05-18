@@ -77,7 +77,9 @@ function buildEmailHtml(
 ) {
   const agentSections = sections
     .map(
-      ({ agent, idea }) => `
+      ({ agent, idea }) => {
+        const approveUrl = `https://agents.pigiota314.gr/approve?agent=${encodeURIComponent(agent.id)}&idea=${encodeURIComponent(idea)}`
+        return `
     <div style="margin-bottom:28px;border-left:4px solid ${agent.color};padding-left:16px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <div style="background:${agent.color};color:#fff;border-radius:50%;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;text-align:center;line-height:32px;">
@@ -87,7 +89,9 @@ function buildEmailHtml(
         <span style="font-size:12px;color:#6b7280;">${agent.description}</span>
       </div>
       <p style="margin:0;font-size:15px;line-height:1.6;color:#374151;">${idea.replace(/\n/g, '<br>')}</p>
-    </div>`,
+      <a href="${approveUrl}" style="display:inline-block;margin-top:14px;background:#16a34a;color:#fff;text-decoration:none;padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;">✅ Έγκριση</a>
+    </div>`
+      },
     )
     .join('')
 
