@@ -1,14 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const code = searchParams.get('code')
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
 
   if (code) {
-    const cookieStore = await cookies()
-
+    const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,17 +25,8 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (!error && data.user) {
-      const allowedEmail = process.env.NEXT_PUBLIC_ALLOWED_EMAIL
-      if (allowedEmail && data.user.email !== allowedEmail) {
-        await supabase.auth.signOut()
-        return NextResponse.redirect(new URL('/login?error=unauthorized', request.url))
-      }
-      return NextResponse.redirect(new URL('/', request.url))
-    }
+    await supabase.auth.exchangeCodeForSession(code)
   }
 
-  return NextResponse.redirect(new URL('/login?error=invalid', request.url))
+  return NextResponse.redirect(new URL('/', request.url))
 }
