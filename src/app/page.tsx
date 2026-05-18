@@ -17,6 +17,8 @@ export default function Home() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingText, setStreamingText] = useState('')
   const [isNewConv, setIsNewConv] = useState(false)
+  const [dailyIdea, setDailyIdea] = useState<string | null>(null)
+  const [isDailyIdeaLoading, setIsDailyIdeaLoading] = useState(false)
   const [memories, setMemories] = useState<AgentMemory[]>([])
   const [memoryExpanded, setMemoryExpanded] = useState(false)
   const [isAddingMemory, setIsAddingMemory] = useState(false)
@@ -31,6 +33,8 @@ export default function Home() {
     setActiveConvId(null)
     setMessages([])
     setIsNewConv(false)
+    setDailyIdea(null)
+    setIsDailyIdeaLoading(false)
   }, [activeAgent.id])
 
   useEffect(() => {
@@ -120,16 +124,51 @@ export default function Home() {
     }
   }
 
+  async function generateDailyIdea(agent: Agent) {
+    setIsDailyIdeaLoading(true)
+    setDailyIdea(null)
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: agent.id,
+          messages: [{
+            role: 'user',
+            content: 'Δώσε μου 1 έξυπνη ιδέα για σήμερα για την επιχείρησή σου. Σύντομα, 2-3 προτάσεις μόνο. Ξεκίνα με: 💡 Ιδέα της ημέρας:',
+          }],
+        }),
+      })
+      if (!res.ok || !res.body) throw new Error()
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let accumulated = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        accumulated += decoder.decode(value, { stream: true })
+        setDailyIdea(accumulated)
+      }
+    } catch {
+      setDailyIdea(null)
+    } finally {
+      setIsDailyIdeaLoading(false)
+    }
+  }
+
   function startNewConversation() {
     setActiveConvId(null)
     setMessages([])
     setIsNewConv(true)
     inputRef.current?.focus()
+    generateDailyIdea(activeAgent)
   }
 
   function selectConversation(conv: Conversation) {
     setActiveConvId(conv.id)
     setIsNewConv(false)
+    setDailyIdea(null)
+    setIsDailyIdeaLoading(false)
   }
 
   async function sendMessage() {
@@ -447,7 +486,7 @@ export default function Home() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-              {messages.length === 0 && !isStreaming && (
+              {messages.length === 0 && !isStreaming && !isDailyIdeaLoading && !dailyIdea && (
                 <div className="flex flex-col items-center justify-center h-full gap-3 text-center text-gray-400">
                   <div
                     className="flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold text-white"
@@ -456,6 +495,27 @@ export default function Home() {
                     {activeAgent.initials}
                   </div>
                   <p className="text-sm">Γειά σου! Πώς μπορώ να σε βοηθήσω;</p>
+                </div>
+              )}
+
+              {/* Daily idea welcome message */}
+              {isNewConv && (isDailyIdeaLoading || dailyIdea) && (
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                    style={{ backgroundColor: activeAgent.color }}
+                  >
+                    {activeAgent.initials}
+                  </div>
+                  <div className="max-w-[70%] rounded-2xl rounded-tl-sm border border-gray-100 bg-white px-4 py-3 text-sm leading-relaxed text-gray-800 shadow-sm whitespace-pre-wrap">
+                    {isDailyIdeaLoading && !dailyIdea ? (
+                      <span className="flex gap-1 py-1">
+                        <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '0ms' }} />
+                        <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '150ms' }} />
+                        <span className="h-2 w-2 rounded-full animate-bounce" style={{ backgroundColor: activeAgent.color, animationDelay: '300ms' }} />
+                      </span>
+                    ) : dailyIdea}
+                  </div>
                 </div>
               )}
 
