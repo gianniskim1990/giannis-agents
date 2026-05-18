@@ -11,6 +11,8 @@ const colorLabels: Record<string, string> = {
   ena: 'κεχριμπάρι/πορτοκαλί (#f59e0b)',
 }
 
+const FALLBACK = 'Δεν ήταν δυνατή η δημιουργία'
+
 function ErrorPage({ message, detail }: { message: string; detail?: string }) {
   return (
     <div className="flex h-screen items-center justify-center bg-[#111827]">
@@ -26,6 +28,15 @@ function ErrorPage({ message, detail }: { message: string; detail?: string }) {
       </div>
     </div>
   )
+}
+
+function parseClaudeJson(text: string) {
+  // Strip markdown code fences if present
+  const stripped = text.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim()
+  const start = stripped.indexOf('{')
+  const end = stripped.lastIndexOf('}')
+  if (start === -1 || end === -1) return null
+  return JSON.parse(stripped.slice(start, end + 1))
 }
 
 export default async function ApprovePage({
@@ -84,7 +95,7 @@ export default async function ApprovePage({
     return (
       <ErrorPage
         message="Η ιδέα δεν βρέθηκε."
-        detail="Ο πίνακας pending_ideas μπορεί να μην έχει δημιουργηθεί ακόμα, ή ο σύνδεσμος έχει λήξει."
+        detail="Ο σύνδεσμος μπορεί να έχει λήξει ή ο πίνακας pending_ideas να μην έχει δημιουργηθεί."
       />
     )
   }
@@ -101,51 +112,50 @@ export default async function ApprovePage({
 
   // --- Claude API ---
   let content = {
-    social_text: idea, // fallback: raw idea text
-    instagram_caption: '',
+    socialText: FALLBACK,
+    caption: FALLBACK,
     hashtags: [] as string[],
-    canva_instructions: '',
+    canvaInstructions: FALLBACK,
   }
 
   try {
     console.log('[approve] calling Claude API')
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-    const prompt = `Ο agent "${agent.name}" (${agent.description}) πρότεινε την ακόλουθη ιδέα:
-
-"${idea}"
-
-Δημιούργησε περιεχόμενο social media γι' αυτή την ιδέα. Απάντησε ΜΟΝΟ με έγκυρο JSON χωρίς markdown blocks, στο format:
+    const prompt = `You are a social media content creator. Based on this idea, generate content. You MUST respond with ONLY a valid JSON object, no markdown, no explanation, just the JSON:
 {
-  "social_text": "Κείμενο 2-3 παράγραφοι έτοιμο για δημοσίευση στα Ελληνικά",
-  "instagram_caption": "Instagram caption με emojis στα Ελληνικά",
-  "hashtags": ["#ελληνικό1", "#english2", "#ελληνικό3"],
-  "canva_instructions": "Οδηγίες για Canva στα Ελληνικά: τι να σχεδιαστεί, διαστάσεις 1080x1080 για Instagram, χρώματα ${colorLabel}, τι κείμενο να μπει στο γραφικό"
+  "socialText": "ready to post Greek social media text, 2-3 paragraphs, no markdown asterisks",
+  "caption": "Instagram caption in Greek with emojis, max 150 chars",
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5", "hashtag6", "hashtag7", "hashtag8", "hashtag9", "hashtag10"],
+  "canvaInstructions": "Step by step Canva instructions in Greek: dimensions 1080x1080, colors ${colorLabel}, text to add, style"
 }
 
-Τα hashtags να είναι 10 συνολικά, mix ελληνικών και αγγλικών.`
+The idea is: ${idea}`
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      system: agent.systemPrompt,
       messages: [{ role: 'user', content: prompt }],
     })
 
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
-    console.log('[approve] Claude response length:', text.length)
+    console.log('[approve] Claude raw response:', text.slice(0, 200))
 
-    const start = text.indexOf('{')
-    const end = text.lastIndexOf('}')
-    if (start !== -1 && end !== -1) {
-      const parsed = JSON.parse(text.slice(start, end + 1))
-      content = { ...content, ...parsed }
+    const parsed = parseClaudeJson(text)
+    console.log('[approve] parsed keys:', parsed ? Object.keys(parsed) : 'null')
+
+    if (parsed) {
+      content = {
+        socialText: parsed.socialText || FALLBACK,
+        caption: parsed.caption || FALLBACK,
+        hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : [],
+        canvaInstructions: parsed.canvaInstructions || FALLBACK,
+      }
     } else {
-      console.warn('[approve] Claude did not return valid JSON, using raw idea as fallback')
+      console.warn('[approve] could not parse Claude JSON')
     }
   } catch (e) {
     console.error('[approve] Claude API error:', e)
-    // content already has idea as social_text fallback
   }
 
   return (

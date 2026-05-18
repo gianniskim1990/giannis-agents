@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Content {
-  social_text: string
-  instagram_caption: string
+  socialText: string
+  caption: string
   hashtags: string[]
-  canva_instructions: string
+  canvaInstructions: string
 }
 
 interface AgentInfo {
@@ -104,35 +104,36 @@ export default function ApproveClient({
           <p className="text-sm text-gray-300">{idea}</p>
         </div>
 
-        <Section title="📢 Κείμενο για Social Media" copyText={content.social_text} color={agent.color}>
-          {content.social_text.split('\n').map((line, i) => (
+        <Section title="📢 Κείμενο για Social Media" copyText={content.socialText} color={agent.color}>
+          {content.socialText.split('\n').map((line, i) => (
             <p key={i} className={line === '' ? 'mt-3' : undefined}>
-              {line || ' '}
+              {line || ' '}
             </p>
           ))}
         </Section>
 
-        <Section title="📸 Instagram Caption" copyText={content.instagram_caption} color={agent.color}>
-          <p className="whitespace-pre-wrap">{content.instagram_caption}</p>
+        <Section title="📸 Instagram Caption" copyText={content.caption} color={agent.color}>
+          <p className="whitespace-pre-wrap">{content.caption}</p>
         </Section>
 
         <Section title="🏷️ Hashtags" copyText={hashtagText} color={agent.color}>
           <div className="flex flex-wrap gap-2">
-            {Array.isArray(content.hashtags) &&
-              content.hashtags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="rounded-full px-3 py-1 text-xs"
-                  style={{ background: `${agent.color}28`, color: agent.color }}
-                >
-                  {tag}
-                </span>
-              ))}
+            {Array.isArray(content.hashtags) && content.hashtags.length > 0
+              ? content.hashtags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="rounded-full px-3 py-1 text-xs"
+                    style={{ background: `${agent.color}28`, color: agent.color }}
+                  >
+                    {tag}
+                  </span>
+                ))
+              : <span className="text-gray-500">Δεν ήταν δυνατή η δημιουργία</span>}
           </div>
         </Section>
 
-        <Section title="🎨 Οδηγίες Canva" copyText={content.canva_instructions} color={agent.color}>
-          <p className="whitespace-pre-wrap">{content.canva_instructions}</p>
+        <Section title="🎨 Οδηγίες Canva" copyText={content.canvaInstructions} color={agent.color}>
+          <p className="whitespace-pre-wrap">{content.canvaInstructions}</p>
         </Section>
       </div>
     </div>
