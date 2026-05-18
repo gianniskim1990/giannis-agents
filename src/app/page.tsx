@@ -135,7 +135,7 @@ export default function Home() {
           agentId: agent.id,
           messages: [{
             role: 'user',
-            content: 'Δώσε μου 1 έξυπνη ιδέα για σήμερα για την επιχείρησή σου. Σύντομα, 2-3 προτάσεις μόνο. Ξεκίνα με: 💡 Ιδέα της ημέρας:',
+            content: `Σήμερα είναι ${new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })}. Δώσε μου 1 έξυπνη ιδέα για σήμερα για την επιχείρησή σου. Σύντομα, 2-3 προτάσεις μόνο. Ξεκίνα με: 💡 Ιδέα της ημέρας:`,
           }],
         }),
       })
