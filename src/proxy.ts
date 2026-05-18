@@ -29,7 +29,12 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  if (!user && pathname !== '/login' && !pathname.startsWith('/auth/')) {
+  if (
+    !user &&
+    pathname !== '/login' &&
+    !pathname.startsWith('/auth/') &&
+    !pathname.startsWith('/api/daily-digest')
+  ) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
