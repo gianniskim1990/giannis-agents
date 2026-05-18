@@ -114,7 +114,7 @@ export default async function ApprovePage({
   let content = {
     socialText: FALLBACK,
     caption: FALLBACK,
-    hashtags: [] as string[],
+    hashtags: [] as string[] | string,
     canvaInstructions: FALLBACK,
   }
 
@@ -134,7 +134,7 @@ The idea is: ${idea}`
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     })
 
@@ -148,7 +148,7 @@ The idea is: ${idea}`
       content = {
         socialText: parsed.socialText || FALLBACK,
         caption: parsed.caption || FALLBACK,
-        hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : [],
+        hashtags: (parsed.hashtags as string[] | string) ?? [],
         canvaInstructions: parsed.canvaInstructions || FALLBACK,
       }
     } else {

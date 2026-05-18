@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 interface Content {
   socialText: string
   caption: string
-  hashtags: string[]
+  hashtags: string[] | string
   canvaInstructions: string
 }
 
@@ -71,7 +71,12 @@ export default function ApproveClient({
   content: Content
 }) {
   const router = useRouter()
-  const hashtagText = Array.isArray(content.hashtags) ? content.hashtags.join(' ') : ''
+  const hashtagList = Array.isArray(content.hashtags)
+    ? content.hashtags
+    : typeof content.hashtags === 'string'
+      ? content.hashtags.split(/[\s,]+/).filter(Boolean)
+      : []
+  const hashtagText = hashtagList.join(' ')
 
   return (
     <div className="min-h-screen bg-[#111827] px-4 py-8">
@@ -118,8 +123,8 @@ export default function ApproveClient({
 
         <Section title="🏷️ Hashtags" copyText={hashtagText} color={agent.color}>
           <div className="flex flex-wrap gap-2">
-            {Array.isArray(content.hashtags) && content.hashtags.length > 0
-              ? content.hashtags.map((tag, i) => (
+            {hashtagList.length > 0
+              ? hashtagList.map((tag, i) => (
                   <span
                     key={i}
                     className="rounded-full px-3 py-1 text-xs"
