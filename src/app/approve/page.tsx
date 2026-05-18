@@ -11,11 +11,12 @@ const colorLabels: Record<string, string> = {
   ena: 'κεχριμπάρι/πορτοκαλί (#f59e0b)',
 }
 
-function ErrorPage({ message }: { message: string }) {
+function ErrorPage({ message, detail }: { message: string; detail?: string }) {
   return (
     <div className="flex h-screen items-center justify-center bg-[#111827]">
-      <div className="text-center">
-        <p className="mb-4 text-white">{message}</p>
+      <div className="max-w-md text-center">
+        <p className="mb-2 text-white">{message}</p>
+        {detail && <p className="mb-4 text-xs text-gray-500">{detail}</p>}
         <a
           href="/"
           className="rounded-xl bg-white/10 px-5 py-2 text-sm text-white transition-colors hover:bg-white/20"
@@ -32,43 +33,85 @@ export default async function ApprovePage({
 }: {
   searchParams: Promise<{ id?: string }>
 }) {
-  const supabase = await createSupabaseServer()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  console.log('[approve] page rendering')
+
+  // --- Auth ---
+  let user = null
+  try {
+    const supabase = await createSupabaseServer()
+    const { data, error } = await supabase.auth.getUser()
+    if (error) console.error('[approve] auth error:', error.message)
+    user = data?.user ?? null
+    console.log('[approve] user:', user?.email ?? 'none')
+  } catch (e) {
+    console.error('[approve] auth threw:', e)
+  }
 
   if (!user) {
     redirect('/login')
   }
 
+  // --- Params ---
   const { id } = await searchParams
+  console.log('[approve] id param:', id)
 
   if (!id) {
-    return <ErrorPage message="Λείπει το αναγνωριστικό ιδέας." />
+    return <ErrorPage message="Λείπει το αναγνωριστικό ιδέας." detail="Παράμετρος id δεν βρέθηκε στο URL." />
   }
 
-  const { data: pending } = await supabase
-    .from('pending_ideas')
-    .select('agent_id, idea_text')
-    .eq('id', id)
-    .single()
+  // --- Fetch from Supabase ---
+  let pending: { agent_id: string; idea_text: string } | null = null
+  try {
+    const supabase = await createSupabaseServer()
+    const { data, error } = await supabase
+      .from('pending_ideas')
+      .select('agent_id, idea_text')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error('[approve] supabase error:', error.code, error.message)
+    } else {
+      console.log('[approve] found idea for agent:', data?.agent_id)
+    }
+    pending = data
+  } catch (e) {
+    console.error('[approve] supabase threw:', e)
+    return <ErrorPage message="Σφάλμα σύνδεσης με τη βάση δεδομένων." detail={String(e)} />
+  }
 
   if (!pending) {
-    return <ErrorPage message="Η ιδέα δεν βρέθηκε. Ίσως έχει λήξει ή ο σύνδεσμος είναι λανθασμένος." />
+    return (
+      <ErrorPage
+        message="Η ιδέα δεν βρέθηκε."
+        detail="Ο πίνακας pending_ideas μπορεί να μην έχει δημιουργηθεί ακόμα, ή ο σύνδεσμος έχει λήξει."
+      />
+    )
   }
 
   const agent = agents[pending.agent_id]
   const idea: string = pending.idea_text
+  console.log('[approve] idea length:', idea.length, 'agent:', pending.agent_id)
 
   if (!agent) {
-    return <ErrorPage message="Άγνωστος agent. Δεν ήταν δυνατή η φόρτωση της σελίδας." />
+    return <ErrorPage message="Άγνωστος agent." detail={`agent_id: ${pending.agent_id}`} />
   }
 
   const colorLabel = colorLabels[pending.agent_id] ?? agent.color
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  // --- Claude API ---
+  let content = {
+    social_text: idea, // fallback: raw idea text
+    instagram_caption: '',
+    hashtags: [] as string[],
+    canva_instructions: '',
+  }
 
-  const prompt = `Ο agent "${agent.name}" (${agent.description}) πρότεινε την ακόλουθη ιδέα:
+  try {
+    console.log('[approve] calling Claude API')
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+    const prompt = `Ο agent "${agent.name}" (${agent.description}) πρότεινε την ακόλουθη ιδέα:
 
 "${idea}"
 
@@ -82,14 +125,6 @@ export default async function ApprovePage({
 
 Τα hashtags να είναι 10 συνολικά, mix ελληνικών και αγγλικών.`
 
-  let content = {
-    social_text: '',
-    instagram_caption: '',
-    hashtags: [] as string[],
-    canva_instructions: '',
-  }
-
-  try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
@@ -97,18 +132,20 @@ export default async function ApprovePage({
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+    const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    console.log('[approve] Claude response length:', text.length)
+
     const start = text.indexOf('{')
     const end = text.lastIndexOf('}')
-    const jsonText = start !== -1 && end !== -1 ? text.slice(start, end + 1) : '{}'
-    content = JSON.parse(jsonText)
-  } catch {
-    content = {
-      social_text: 'Σφάλμα κατά τη δημιουργία περιεχομένου. Παρακαλώ δοκιμάστε ξανά.',
-      instagram_caption: '',
-      hashtags: [],
-      canva_instructions: '',
+    if (start !== -1 && end !== -1) {
+      const parsed = JSON.parse(text.slice(start, end + 1))
+      content = { ...content, ...parsed }
+    } else {
+      console.warn('[approve] Claude did not return valid JSON, using raw idea as fallback')
     }
+  } catch (e) {
+    console.error('[approve] Claude API error:', e)
+    // content already has idea as social_text fallback
   }
 
   return (
