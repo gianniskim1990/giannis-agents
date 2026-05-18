@@ -1,11 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase, type Conversation, type Message } from '@/lib/supabase'
 import { agentList, agents, type Agent } from '@/lib/agents'
-import { Send, Plus, MessageSquare, ChevronRight } from 'lucide-react'
+import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { Send, Plus, MessageSquare, ChevronRight, LogOut } from 'lucide-react'
 
 export default function Home() {
+  const router = useRouter()
   const [activeAgent, setActiveAgent] = useState<Agent>(agentList[0])
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConvId, setActiveConvId] = useState<string | null>(null)
@@ -147,6 +150,12 @@ export default function Home() {
     }
   }
 
+  async function handleLogout() {
+    const auth = createSupabaseBrowser()
+    await auth.auth.signOut()
+    router.push('/login')
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -249,6 +258,16 @@ export default function Home() {
               </span>
             </button>
           ))}
+        </div>
+        {/* Logout */}
+        <div className="px-3 py-3 border-t border-white/10">
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/40 transition-colors hover:bg-white/10 hover:text-white/70"
+          >
+            <LogOut className="h-4 w-4" />
+            Αποσύνδεση
+          </button>
         </div>
       </aside>
 
