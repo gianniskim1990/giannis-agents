@@ -69,11 +69,23 @@ export async function GET(request: Request) {
 
   const to = process.env.DAILY_EMAIL_TO ?? 'italybar1234@gmail.com'
 
-  await resend.emails.send({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (resend.emails.send as any)({
     from: 'Giannis Agents <onboarding@resend.dev>',
     to,
     subject: `🧠 Ιδέες των Agents σου — ${today}`,
     html,
+    headers: {
+      'X-Entity-Ref-ID': new Date().getTime().toString(),
+    },
+    tags: [
+      {
+        name: 'category',
+        value: 'daily_digest',
+      },
+    ],
+    clickTracking: false,
+    openTracking: false,
   })
 
   return Response.json({ ok: true, date: today })
