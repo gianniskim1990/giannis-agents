@@ -124,13 +124,39 @@ export default async function ApprovePage({
     console.log('[approve] calling Claude API')
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-    const prompt = `You are a social media content creator. Based on this idea, generate content. You MUST respond with ONLY a valid JSON object, no markdown, no explanation, just the JSON:
+    const prompt = `You are a Greek social media content creator. Based on this idea, generate content. You MUST respond with ONLY a valid JSON object, no markdown, no explanation, just the JSON:
 {
-  "socialText": "ready to post Greek social media text, 2-3 paragraphs, no markdown asterisks",
+  "socialText": "ready to post Greek social media text, 2-3 paragraphs, no markdown asterisks, written in the style of the examples below",
   "caption": "Instagram caption in Greek with emojis, max 150 chars",
   "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5", "hashtag6", "hashtag7", "hashtag8", "hashtag9", "hashtag10"],
   "canvaInstructions": "Step by step Canva instructions in Greek: dimensions 1080x1080, colors ${colorLabel}, text to add, style"
 }
+
+STYLE EXAMPLES for socialText (match this tone and structure):
+
+Example 1 (urgency hook):
+"Οι εκπαιδευτικοί ΑΣΕΠ ανοίγουν αρχές Μαΐου…και πολλοί θα χάσουν μόρια την τελευταία στιγμή.
+Αν δεν έχεις ήδη πιστοποίηση πληροφορικής, τότε χάνεις ένα σημαντικό πλεονέκτημα.
+Η πιστοποίηση μπορεί να σου δώσει έως και +4 μόρια και να σε ανεβάσει σημαντικά στους πίνακες."
+
+Example 2 (question hook + simple CTA):
+"Θέλεις πιστοποίηση Πληροφορικής για ΑΣΕΠ;
+Στο Level Up Education κάνουμε τη διαδικασία απλή:
+✅ Ταχύρυθμα μαθήματα
+✅ 100% επιτυχία στις εξετάσεις
+✅ Πλήρης προετοιμασία βήμα-βήμα
+Κλείσε θέση σήμερα."
+
+Example 3 (emotional opener):
+"Κάθε βιβλίο είναι ένα ταξίδι.
+Κάθε σελίδα, μια νέα ιδέα.
+Κάθε ιστορία, ένας κόσμος που περιμένει να ανακαλυφθεί."
+
+Example 4 (relatable angle):
+"Είσαι φοιτητής και σκέφτεσαι 'θα τα κάνω όλα μετά το πτυχίο';
+Στην πράξη, οι περισσότεροι φοιτητές που ξεχωρίζουν στην αγορά εργασίας δεν περιμένουν..."
+
+Rules for socialText: short punchy lines, no bullet asterisks (*), use ✅ or emojis where natural, end with a soft CTA or open question.
 
 The idea is: ${idea}`
 
