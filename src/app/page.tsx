@@ -131,16 +131,24 @@ export default function Home() {
   async function generateDailyIdea(agent: Agent) {
     setIsDailyIdeaLoading(true)
     setDailyIdea(null)
+
+    const today = new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })
+
+    const voiceInstructions: Record<string, string> = {
+      'level-up': `\n\nΓράψε την ιδέα ΑΚΡΙΒΩΣ με το ύφος του Level Up Education:\n- Ξεκίνα με hook που αγγίζει πρόβλημα ή συναίσθημα\n- Γράψε απλά και κατευθείαν\n- Χρησιμοποίησε bullets με ✅ για λίστες\n- Τελείωσε με CTA: 2541 027804 / 6975946984, Μπρωκούμη 30 Ξάνθη\n- Emojis με μέτρο\n- Μίλα απευθείας στον αναγνώστη με 'εσύ/σου/σε'\n- Τόνος: έμπιστος σύμβουλος, ΟΧΙ πωλητής`,
+      pigiota: `\n\nΓράψε την ιδέα ΑΚΡΙΒΩΣ με το ύφος της pigiota314:\n- Ξεκίνα με hook: value statement ή ερώτηση για επιχειρήσεις\n- Owner-led τόνος: προσωπικό, αυθεντικό — σαν ο Γιάννης να μιλάει απευθείας\n- Εστίασε σε websites, web apps ή SaaS — ΟΧΙ generic "digital marketing"\n- Δείξε πραγματική αξία και πραγματικά αποτελέσματα για επιχειρήσεις\n- CTA: στείλε μήνυμα ή επικοινώνησε μέσω pigiota314.gr\n- Emojis με μέτρο (1-2 max)\n- Τόνος: στρατηγικός σύμβουλος, ΟΧΙ vendor`,
+    }
+
+    const basePrompt = `Σήμερα είναι ${today}. Δώσε μου 1 έξυπνη ιδέα για σήμερα για την επιχείρησή σου. Σύντομα, 2-3 προτάσεις μόνο. Ξεκίνα με: 💡 Ιδέα της ημέρας:`
+    const ideaPrompt = basePrompt + (voiceInstructions[agent.id] ?? '')
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           agentId: agent.id,
-          messages: [{
-            role: 'user',
-            content: `Σήμερα είναι ${new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })}. Δώσε μου 1 έξυπνη ιδέα για σήμερα για την επιχείρησή σου. Σύντομα, 2-3 προτάσεις μόνο. Ξεκίνα με: 💡 Ιδέα της ημέρας:`,
-          }],
+          messages: [{ role: 'user', content: ideaPrompt }],
         }),
       })
       if (!res.ok || !res.body) throw new Error()

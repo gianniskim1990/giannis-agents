@@ -185,38 +185,57 @@ Example 4 — Εποχιακό / Αργία:
 #LevelUpEducation #KaloPasxa #Xanthi"`,
 
     pigiota: `
-BRAND VOICE — pigiota314.gr (digital agency στην Ξάνθη):
-- Επαγγελματικό αλλά ζεστό, owner-led, αυθεντικό
-- Δείχνει πραγματική δουλειά, πραγματικά αποτελέσματα
-- Δεν ακούγεται σαν generic agency
-- Strategic CTAs, όχι aggressive
-- Λίγα emojis
-- Hashtags: English professional (#WebDesign #SEO #DigitalMarketing #pigiota314)
+BRAND VOICE — pigiota314.gr (digital agency στην Ξάνθη, https://pigiota314.gr):
+Ιδιοκτήτης: Γιάννης Κιμούντρης | info@pigiota314.gr | +30 697 594 6984
 
-POST STRUCTURE (portfolio):
-1. Hook — "Νέο project" ή strong value statement
-2. Περιγραφή — τι υλοποιήθηκε και γιατί
-3. Deliverables — bullets με ✔️ ή ✅
-4. CTA — soft: "Στείλε μας μήνυμα να το δούμε μαζί"
-5. Hashtags
+POSITIONING (κρίσιμο — πάντα να αντικατοπτρίζεται):
+Η pigiota314 ΔΕΝ είναι "απλά digital marketing". Κατασκευάζει ιστοσελίδες, web εφαρμογές και SaaS λύσεις για επιχειρήσεις. Αυτή η ιεραρχία να φαίνεται και στο περιεχόμενο.
 
-REAL EXAMPLES:
+TONE RULES:
+- Owner-led: σαν ο Γιάννης να μιλάει προσωπικά — αυθεντικό, όχι corporate
+- Επαγγελματικό αλλά ζεστό — ποτέ κρύο ή generic
+- Δείχνει πραγματική δουλειά και πραγματικά αποτελέσματα
+- Strategic CTAs — ποτέ aggressive, πάντα conversational
+- Λίγα emojis (1-3 max, μόνο όπου ταιριάζουν)
+- Hashtags: English professional + #pigiota314 πάντα
 
-Example 1 — Portfolio showcase:
+POST STRUCTURE — Portfolio / Project showcase:
+1. Hook — "Νέο project" ή strong value statement (π.χ. "Δεν είναι απλά ένα website")
+2. Περιγραφή — τι υλοποιήθηκε, για ποιον και γιατί μετράει
+3. Deliverables — bullets με ✔️ (σύγχρονο design, SEO, mobile, branding κλπ)
+4. CTA — soft, personal: "Στείλε μας μήνυμα να το δούμε μαζί" ή "Δες το project: [link]"
+5. Hashtags — #WebDesign #SEO #DigitalMarketing #pigiota314 #BusinessGrowth
+
+POST STRUCTURE — Value / Agency post:
+1. Hook — ερώτηση ή bold statement για επιχειρήσεις
+2. Εξήγηση — γιατί αυτό μετράει στην πράξη (π.χ. leads, εμπιστοσύνη, SEO)
+3. CTA — χαλαρό: "Ίσως ήρθε η ώρα να το ξαναδούμε 😉" ή "pigiota314.gr"
+4. Hashtags
+
+POST STRUCTURE — SaaS / App post:
+1. Hook — το πρόβλημα που λύνει το app
+2. Λύση — τι χτίστηκε και για ποιον κλάδο
+3. CTA — "Έχεις ιδέα για app; Ας μιλήσουμε."
+4. Hashtags — #SaaS #WebApp #pigiota314
+
+REAL EXAMPLES (match this exact style):
+
+Example 1 — Portfolio showcase (IliasTech):
 "🚀 Νέο Website Project για επαγγελματία τεχνικό!
 
-Στην pigiota314, δημιουργήσαμε την online παρουσία του IliasTech με στόχο την αξιοπιστία, την ταχύτητα και τη μετατροπή επισκεπτών σε πελάτες.
+Στην pigiota314, δημιουργήσαμε την online παρουσία του IliasTech, ενός πιστοποιημένου τεχνικού service, με στόχο την αξιοπιστία, την ταχύτητα και τη μετατροπή επισκεπτών σε πελάτες.
 
 💡 Τι υλοποιήσαμε:
 ✔️ Σύγχρονο & mobile-friendly design
 ✔️ Δομή που οδηγεί σε άμεση επικοινωνία
 ✔️ SEO-ready περιεχόμενο
 ✔️ Καθαρό επαγγελματικό branding
+✔️ Στρατηγική προβολής υπηρεσιών
 
 🎯 Έχεις επιχείρηση και θέλεις website που φέρνει πελάτες;
 Στείλε μας μήνυμα να το δούμε μαζί.
 
-#WebDesign #SEO #DigitalMarketing #pigiota314 #BusinessGrowth"
+#WebDesign #SEO #DigitalMarketing #Portfolio #pigiota314 #BusinessGrowth"
 
 Example 2 — Value hook:
 "🔥 Δεν είναι απλά ένα website. Είναι εργαλείο πωλήσεων.
@@ -228,7 +247,17 @@ Example 2 — Value hook:
 
 💬 Αν το website σου δεν σου φέρνει πελάτες… ίσως ήρθε η ώρα να το ξαναδούμε 😉
 
-#WebDesign #LeadGeneration #pigiota314"`,
+#WebDesign #LeadGeneration #pigiota314 #DigitalMarketing"
+
+Example 3 — SaaS / app angle:
+"Κάθε κλάδος έχει ανάγκη από ένα εργαλείο που λύνει ένα συγκεκριμένο πρόβλημα.
+
+Rantevo, SalonPilot, Physio — SaaS apps που φτιάξαμε από το μηδέν για salons, beauty centers και φυσικοθεραπευτές.
+
+Έχεις ιδέα για app ή θέλεις να αυτοματοποιήσεις κάτι στην επιχείρησή σου;
+Ας μιλήσουμε. pigiota314.gr
+
+#SaaS #WebApp #pigiota314 #DigitalProducts"`,
   }
 
   const agentStyle = styleContext[pending.agent_id] ?? ''
