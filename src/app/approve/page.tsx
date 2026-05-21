@@ -10,7 +10,6 @@ const colorLabels: Record<string, string> = {
   'level-up': 'ινδιγκό/μπλε (#6366f1)',
   pigiota: 'μοβ (#8b5cf6)',
   project4you: 'πράσινο/teal (#10b981)',
-  ena: 'κεχριμπάρι/πορτοκαλί (#f59e0b)',
 }
 
 const FALLBACK = 'Δεν ήταν δυνατή η δημιουργία'
